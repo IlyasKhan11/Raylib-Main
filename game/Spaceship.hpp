@@ -13,6 +13,7 @@ public:
     void MoveLeft();  // Move left method
     void MoveRight(); // Move right method
     void FireLaser(); // Fire laser method
+    Rectangle getRect();
     std::vector<Laser>& GetLasers(); // Public method to access lasers
 
 private:

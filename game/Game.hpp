@@ -2,22 +2,35 @@
 #define GAME_HPP
 
 #include "Spaceship.hpp"
-#include "Obstacle.hpp" // Include the Obstacle class
+#include "Alien.hpp"
+#include "Obstacle.hpp"
+#include "Laser.hpp"
 #include <vector>
 
 class Game {
 public:
-    Game();  // Constructor
+    Game(); // Constructor
     ~Game(); // Destructor
-    void Draw();  // Draw method
-    void Update(); // Update method
-    void HandleInput(); // Handle input method
+
+    void Draw(); // Draw everything
+    void HandleInput(); // Handle user input
+    void Update(); // Update game state
 
 private:
-    Spaceship spaceship; // Spaceship object
+    Spaceship spaceship; // Player spaceship
     std::vector<Obstacle> obstacles; // List of obstacles
+    std::vector<Alien> aliens; // List of aliens
+    std::vector<Laser> alienLasers; // List of alien lasers
+    int alienDirection; // Direction of alien movement (1 = right, -1 = left)
+    double timeLastAlienFired; // Last time an alien fired a laser
+    double alienLaserShootInterval; // Interval between alien laser shots
+
     void DeleteInactiveLasers(); // Delete inactive lasers
     std::vector<Obstacle> CreateObstacles(); // Create obstacles
+    std::vector<Alien> CreateAliens(); // Create aliens
+    void MoveAliens(); // Move aliens
+    void MoveDownAliens(int distance); // Move aliens down
+    void AlienShootLaser(); // Alien shoots laser
 };
 
 #endif // GAME_HPP

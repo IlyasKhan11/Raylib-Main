@@ -76,3 +76,13 @@ void Spaceship::FireLaser() {
 std::vector<Laser>& Spaceship::GetLasers() {
     return lasers;
 }
+
+
+Rectangle Spaceship::getRect() {
+    return {
+        position.x,               // X position of the top-left corner
+        position.y,               // Y position of the top-left corner
+        static_cast<float>(image.width),  // Width of the spaceship
+        static_cast<float>(image.height)  // Height of the spaceship
+    };
+}

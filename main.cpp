@@ -8,6 +8,7 @@
 #include "game/Spaceship.hpp"
 #include "game/Game.hpp"
 #include "game/Obstacle.hpp"
+#include "game/Alien.hpp"
 
 #define MAX_INPUT_LENGTH 50
 
@@ -136,6 +137,8 @@ bool InsertNewUser(const char* username, const char* password) {
 #include "raylib.h"
 #include <iostream> // For debugging
 
+#include "raylib.h"
+
 void DrawGame(Texture2D background)
 {
     // Initialize window (temporarily disable fullscreen for debugging)
@@ -145,31 +148,50 @@ void DrawGame(Texture2D background)
     // Load texture from file
     Texture2D backgroundTexture = LoadTexture("game/assts/spaceship.png");
 
+    // Define the red X button
+    const int buttonSize = 30; // Size of the button (square)
+    Rectangle buttonBounds = { screenWidth - buttonSize - 10, 10, buttonSize, buttonSize }; // Position at top-right corner
+    Color buttonColor = RED; // Color of the button
+
     Game game;
+
     // Main game loop
     while (!WindowShouldClose()) // Check if window should close
     {
         // Begin drawing
         BeginDrawing();
         ClearBackground(BLACK);
+
+        // Draw the game
         game.HandleInput();
-   
-
         game.Update();
-
         game.Draw();
-        
+
+        // Draw the red X button
+        DrawRectangleRec(buttonBounds, buttonColor); // Draw the button
+        DrawText("X", screenWidth - buttonSize - 5, 15, 20, WHITE); // Draw the "X" text
+
+        // Check if the button is clicked
+        if (CheckCollisionPointRec(GetMousePosition(), buttonBounds)) {
+            // Change button color when hovered
+            buttonColor = Color{ 255, 0, 0, 150 }; // Semi-transparent red
+
+            // Check if the button is clicked
+            if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+                break; // Exit the game loop
+            }
+        } else {
+            buttonColor = RED; // Reset button color
+        }
+
         // End drawing
         EndDrawing();
     }
 
     // Unload texture and close window
     UnloadTexture(backgroundTexture);
-    CloseWindow();
+    // CloseWindow();
 }
-
-
-
 
 
 
@@ -377,8 +399,8 @@ int main() {
     
     while (!WindowShouldClose() && !shouldClose) {
 
-        DrawGame(background);
-        continue;
+        // DrawGame(background);
+        // continue;
 
         if (showIntro) {
             // Countdown timer for the intro screen
