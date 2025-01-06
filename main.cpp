@@ -6,6 +6,8 @@
 #include <string>
 
 #include "game/Spaceship.hpp"
+#include "game/Game.hpp"
+#include "game/Obstacle.hpp"
 
 #define MAX_INPUT_LENGTH 50
 
@@ -143,21 +145,20 @@ void DrawGame(Texture2D background)
     // Load texture from file
     Texture2D backgroundTexture = LoadTexture("game/assts/spaceship.png");
 
-    Spaceship ship;
-
+    Game game;
     // Main game loop
     while (!WindowShouldClose()) // Check if window should close
     {
         // Begin drawing
         BeginDrawing();
-        ClearBackground(DARKGRAY);
-
+        ClearBackground(BLACK);
+        game.HandleInput();
    
 
-    
+        game.Update();
 
-        ship.Draw();
-
+        game.Draw();
+        
         // End drawing
         EndDrawing();
     }

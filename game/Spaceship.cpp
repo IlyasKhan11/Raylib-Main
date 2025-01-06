@@ -1,7 +1,7 @@
 #include "Spaceship.hpp"
 
 // Constructor
-Spaceship::Spaceship() {
+Spaceship::Spaceship() : lastFiretime(0.0) {
     // Use the correct path to the image file
     const char* imagePath = "/home/muhammad-ilyas-khan/Desktop/raylib main/game/assets/spaceship.png";
     Image im = LoadImage(imagePath); // Load the image
@@ -21,8 +21,8 @@ Spaceship::Spaceship() {
 
     UnloadImage(im); // Unload the image (the texture is already loaded)
 
-    position.x = (GetScreenWidth() - image.width)/2; // Initial X position
-    position.y = GetScreenHeight()-image.height; // Initial Y position
+    position.x = (GetScreenWidth() - image.width) / 2; // Initial X position
+    position.y = GetScreenHeight() - image.height; // Initial Y position
 }
 
 // Destructor
@@ -42,4 +42,37 @@ void Spaceship::Draw() {
     } else {
         TraceLog(LOG_WARNING, "Cannot draw texture: Texture is not loaded!");
     }
+
+    // Draw all lasers
+    for (auto& laser : lasers) {
+        laser.Draw();
+    }
+}
+
+void Spaceship::MoveLeft() {
+    position.x -= 5; // Move left by 5 units
+    if (position.x < 0) {
+        position.x = 0; // Prevent the spaceship from moving off the screen
+    }
+}
+
+// Move the spaceship right
+void Spaceship::MoveRight() {
+    position.x += 5; // Move right by 5 units
+    if (position.x > GetScreenWidth() - image.width) {
+        position.x = GetScreenWidth() - image.width; // Prevent the spaceship from moving off the screen
+    }
+}
+
+// Fire a laser
+void Spaceship::FireLaser() {
+    if (GetTime() - lastFiretime >= 0.35) {
+        lasers.push_back(Laser({position.x + image.width / 2 - 2, position.y}, -6));
+        lastFiretime = GetTime(); // Update the last fire time
+    }
+}
+
+// Public method to access lasers
+std::vector<Laser>& Spaceship::GetLasers() {
+    return lasers;
 }
