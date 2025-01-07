@@ -172,7 +172,7 @@ void DrawGame(Texture2D background) {
         // Draw the current score
         currentScore = game.GetScore(); // Get the current score from the game
         std::string scoreText = "Score: " + std::to_string(currentScore); // Convert score to string
-        DrawText(scoreText.c_str(), screenWidth - 150, 50, 20, WHITE); // Display score below the X button
+        // DrawText(scoreText.c_str(), screenWidth - 150, 50, 20, WHITE); // Display score below the X button
 
         // Compare with high score (example: assume high score is stored in a variable)
         static int highScore = 0; // Example high score (you can replace this with actual high score logic)
@@ -180,15 +180,7 @@ void DrawGame(Texture2D background) {
             highScore = currentScore; // Update high score if current score is higher
         }
 
-        // Check if the game is over
-        if (game.isOver) {
-            EndDrawing(); // End the current frame before switching to the game-over screen
-            bool shouldReturnToMenu = DrawGameOverScreen(currentScore, bg); // Show game-over screen
-            std::cout<<"-------------------------------------game over ################################################33"<<std::endl;
-            if (shouldReturnToMenu) {
-                break; // Exit the game loop and return to the menu
-            }
-        }
+
 
 
         // Check if the red X button is clicked

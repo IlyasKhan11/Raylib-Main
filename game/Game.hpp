@@ -19,6 +19,7 @@ public:
     bool run;
     int GetScore();
     void ResetGame();
+    void InitGame();
     bool isOver;
 private:
     Spaceship spaceship; // Player spaceship

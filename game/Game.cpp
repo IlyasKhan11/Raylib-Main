@@ -5,16 +5,7 @@
 
 // Constructor
 Game::Game() {
-    Alien::LoadImages(); // Load alien textures once
-    obstacles = CreateObstacles(); // Initialize obstacles
-    aliens = CreateAliens(); // Initialize aliens
-    alienDirection = 1; // Start moving aliens to the right
-    timeLastAlienFired = GetTime(); // Initialize last fire time
-    alienLaserShootInterval = 0.5; // Set interval between alien laser shots
-    lives = 3;
-    run = true;
-    highscore = 0;
-    isOver=false;
+    InitGame();
 }
 
 // Destructor
@@ -34,8 +25,9 @@ void Game::Draw() {
         DrawText("O O", 100, 10, 20, WHITE);
     } else if (lives == 1) {
         DrawText("O", 100, 10, 20, WHITE);
-    }else if(lives==0){
-        DrawText("GAME OVER",GetScreenWidth()-100,20,50,RED);
+    } else if (lives == 0) {
+        DrawText("GAME OVER", GetScreenWidth() / 2 - 100, GetScreenHeight() / 2 - 50, 50, RED);
+        DrawText("Press ENTER to Restart", GetScreenWidth() / 2 - 150, GetScreenHeight() / 2 + 50, 30, WHITE);
     }
 
     // Draw score
@@ -88,8 +80,12 @@ void Game::Update() {
         MoveAliens(); // Move aliens
         AlienShootLaser(); // Alien shoots laser
         CheckForCollisions();
-    }else{
-        isOver=true;
+    } else {
+        // Check if ENTER is pressed to reset the game
+        if (IsKeyPressed(KEY_ENTER)) {
+            ResetGame(); // Reset the game state
+            InitGame(); // Reinitialize the game
+        }
     }
 }
 
@@ -130,7 +126,7 @@ std::vector<Obstacle> Game::CreateObstacles() {
 // Create aliens
 std::vector<Alien> Game::CreateAliens() {
     std::vector<Alien> aliens;
-    for (int row = 0; row < 5; row++) {
+    for (int row = 0; row < 10; row++) {
         for (int column = 0; column < 11; column++) { // Reduced columns for better spacing
             int alienType;
             if (row == 0) {
@@ -270,10 +266,20 @@ void Game::CheckForCollisions() {
 // Game over method
 void Game::GameOver() {
     run = false; // Stop the game
-    isOver=true;
+    isOver = true; // Set game-over state
+}
 
-    // Reset the game state if needed
-    ResetGame();
+void Game::InitGame() {
+    Alien::LoadImages(); // Load alien textures once
+    obstacles = CreateObstacles(); // Initialize obstacles
+    aliens = CreateAliens(); // Initialize aliens
+    alienDirection = 1; // Start moving aliens to the right
+    timeLastAlienFired = GetTime(); // Initialize last fire time
+    alienLaserShootInterval = 0.5; // Set interval between alien laser shots
+    lives = 3; // Reset lives
+    run = true; // Set the game to running state
+    highscore = 0; // Reset score
+    isOver = false; // Reset game-over state
 }
 
 // Get score method
@@ -283,11 +289,14 @@ int Game::GetScore() {
 
 // Reset game method
 void Game::ResetGame() {
-    lives = 3;
-    highscore = 0;
-    aliens = CreateAliens(); // Reinitialize aliens
-    obstacles = CreateObstacles(); // Reinitialize obstacles
-    // spaceship.Reset(); // Reset the spaceship position
+    lives = 3; // Reset lives
+    highscore = 0; // Reset score
+    obstacles.clear(); // Clear obstacles
+    aliens.clear(); // Clear aliens
     alienLasers.clear(); // Clear alien lasers
     spaceship.GetLasers().clear(); // Clear player lasers
+    run = true; // Set the game to running state
+    isOver = false; // Reset game-over state
+    alienDirection = 1; // Reset alien movement direction
+    timeLastAlienFired = GetTime(); // Reset alien laser firing timer
 }
