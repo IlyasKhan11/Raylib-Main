@@ -9,6 +9,8 @@ Game::Game() {
     alienDirection = 1; // Start moving aliens to the right
     timeLastAlienFired = GetTime(); // Initialize last fire time
     alienLaserShootInterval = 0.5; // Set interval between alien laser shots
+    lives=3;
+    run=true;
 }
 
 // Destructor
@@ -59,6 +61,7 @@ void Game::Update() {
     DeleteInactiveLasers(); // Delete inactive lasers
     MoveAliens(); // Move aliens
     AlienShootLaser(); // Alien shoots laser
+    CheckForCollisions();
     std::cout << "Vector Size:------------> " << spaceship.GetLasers().size() << std::endl;
 }
 
@@ -99,7 +102,7 @@ std::vector<Obstacle> Game::CreateObstacles() {
 // Create aliens
 std::vector<Alien> Game::CreateAliens() {
     std::vector<Alien> aliens;
-    for (int row = 0; row < 5; row++) {
+    for (int row = 0; row < 10; row++) {
         for (int column = 0; column < 18; column++) { // Reduced columns for better spacing
             int alienType;
             if (row == 0) {
@@ -164,4 +167,93 @@ void Game::AlienShootLaser() {
 
         timeLastAlienFired = currentTime;
     }
+}
+
+
+
+void Game::CheckForCollisions()
+{
+    //Spaceship Lasers
+
+    for(auto& laser: spaceship.GetLasers()) {
+        auto it = aliens.begin();
+        while(it != aliens.end()){
+            if(CheckCollisionRecs(it -> getRect(), laser.getRect()))
+            {
+
+                it = aliens.erase(it);
+                laser.active = false;
+            } else {
+                ++it;
+            }
+        }
+
+        for(auto& obstacle: obstacles){
+            auto it = obstacle.blocks.begin();
+            while(it != obstacle.blocks.end()){
+                if(CheckCollisionRecs(it -> getRect(), laser.getRect())){
+                    it = obstacle.blocks.erase(it);
+                    laser.active = false;
+                } else {
+                    ++it;
+                }
+            }
+        }
+
+        // if(CheckCollisionRecs(mysteryship.getRect(), laser.getRect())){
+        //     mysteryship.alive = false;
+        //     laser.active = false;
+        //     score += 500;
+        //     checkForHighscore();
+        //     PlaySound(explosionSound);
+        // }
+    }
+
+    // Alien Lasers
+
+    for(auto& laser: alienLasers) {
+        if(CheckCollisionRecs(laser.getRect(), spaceship.getRect())){
+            laser.active = false;
+            lives --;
+            if(lives == 0) {
+                GameOver();
+            }
+        }
+
+          for(auto& obstacle: obstacles){
+            auto it = obstacle.blocks.begin();
+            while(it != obstacle.blocks.end()){
+                if(CheckCollisionRecs(it -> getRect(), laser.getRect())){
+                    it = obstacle.blocks.erase(it);
+                    laser.active = false;
+                } else {
+                    ++it;
+                }
+            }
+        }
+    }
+
+    //Alien Collision with Obstacle
+    
+    for(auto& alien: aliens) {
+        for(auto& obstacle: obstacles) {
+            auto it = obstacle.blocks.begin();
+            while(it != obstacle.blocks.end()) {
+                if(CheckCollisionRecs(it -> getRect(), alien.getRect())) {
+                    it = obstacle.blocks.erase(it);
+                } else {
+                    it ++;
+                }
+            }
+        }
+
+        if(CheckCollisionRecs(alien.getRect(), spaceship.getRect())) {
+            // GameOver();
+        }
+    }
+}
+
+
+void Game::GameOver(){
+
 }

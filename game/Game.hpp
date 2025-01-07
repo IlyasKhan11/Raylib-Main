@@ -15,6 +15,7 @@ public:
     void Draw(); // Draw everything
     void HandleInput(); // Handle user input
     void Update(); // Update game state
+    bool run;
 
 private:
     Spaceship spaceship; // Player spaceship
@@ -24,10 +25,14 @@ private:
     int alienDirection; // Direction of alien movement (1 = right, -1 = left)
     double timeLastAlienFired; // Last time an alien fired a laser
     double alienLaserShootInterval; // Interval between alien laser shots
+    int lives;
 
     void DeleteInactiveLasers(); // Delete inactive lasers
     std::vector<Obstacle> CreateObstacles(); // Create obstacles
     std::vector<Alien> CreateAliens(); // Create aliens
+    void CheckForCollisions();
+    void GameOver();
+
     void MoveAliens(); // Move aliens
     void MoveDownAliens(int distance); // Move aliens down
     void AlienShootLaser(); // Alien shoots laser

@@ -31,11 +31,15 @@ void Alien::Update(int direction) {
 
 // Get collision rectangle
 Rectangle Alien::getRect() const {
+    Texture2D* images = Alien::getAlienImages();
+    Texture2D currentTexture = images[type - 1]; // type is 1-based
+
+    // Return the bounding rectangle
     return {
-        position.x,
-        position.y,
-        float(alienImages[type - 1].width),
-        float(alienImages[type - 1].height)
+        position.x,               // X position of the top-left corner
+        position.y,               // Y position of the top-left corner
+        static_cast<float>(currentTexture.width),  // Width of the alien texture
+        static_cast<float>(currentTexture.height)  // Height of the alien texture
     };
 }
 
