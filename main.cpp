@@ -36,6 +36,7 @@ typedef struct {
 sqlite3* db = NULL;
 UserState currentUser = {0};
 const char* logedInUser="";
+int currentScore=0;
 
 void InitInputField(InputField* field, Rectangle bounds) {
     field->text[0] = '\0';
@@ -139,14 +140,13 @@ bool InsertNewUser(const char* username, const char* password) {
 
 #include "raylib.h"
 
-void DrawGame(Texture2D background)
-{
-    // Initialize window (temporarily disable fullscreen for debugging)
+void DrawGame(Texture2D background) {
     const int screenWidth = GetScreenWidth();
     const int screenHeight = GetScreenHeight();
 
     // Load texture from file
     Texture2D backgroundTexture = LoadTexture("game/assts/spaceship.png");
+    Texture2D bg = LoadTexture("hbg.png");
 
     // Define the red X button
     const int buttonSize = 30; // Size of the button (square)
@@ -156,9 +156,7 @@ void DrawGame(Texture2D background)
     Game game;
 
     // Main game loop
-    while (!WindowShouldClose()) // Check if window should close
-    {
-        // Begin drawing
+    while (!WindowShouldClose()) {
         BeginDrawing();
         ClearBackground(BLACK);
 
@@ -171,7 +169,29 @@ void DrawGame(Texture2D background)
         DrawRectangleRec(buttonBounds, buttonColor); // Draw the button
         DrawText("X", screenWidth - buttonSize - 5, 15, 20, WHITE); // Draw the "X" text
 
-        // Check if the button is clicked
+        // Draw the current score
+        currentScore = game.GetScore(); // Get the current score from the game
+        std::string scoreText = "Score: " + std::to_string(currentScore); // Convert score to string
+        DrawText(scoreText.c_str(), screenWidth - 150, 50, 20, WHITE); // Display score below the X button
+
+        // Compare with high score (example: assume high score is stored in a variable)
+        static int highScore = 0; // Example high score (you can replace this with actual high score logic)
+        if (currentScore > highScore) {
+            highScore = currentScore; // Update high score if current score is higher
+        }
+
+        // Check if the game is over
+        if (game.isOver) {
+            EndDrawing(); // End the current frame before switching to the game-over screen
+            bool shouldReturnToMenu = DrawGameOverScreen(currentScore, bg); // Show game-over screen
+            std::cout<<"-------------------------------------game over ################################################33"<<std::endl;
+            if (shouldReturnToMenu) {
+                break; // Exit the game loop and return to the menu
+            }
+        }
+
+
+        // Check if the red X button is clicked
         if (CheckCollisionPointRec(GetMousePosition(), buttonBounds)) {
             // Change button color when hovered
             buttonColor = Color{ 255, 0, 0, 150 }; // Semi-transparent red
@@ -184,16 +204,12 @@ void DrawGame(Texture2D background)
             buttonColor = RED; // Reset button color
         }
 
-        // End drawing
         EndDrawing();
     }
 
     // Unload texture and close window
     UnloadTexture(backgroundTexture);
-    // CloseWindow();
 }
-
-
 
 void DrawCreditsPage(Texture2D background) {
     
@@ -243,6 +259,93 @@ void DrawCreditsPage(Texture2D background) {
 
         EndDrawing();
     }
+}
+
+
+
+#include <sqlite3.h>
+#include <stdio.h>
+#include <string.h>
+
+// Function to update the high score for the current logged-in user
+void UpdateHighScore(sqlite3* db, const char* username, int currentScore) {
+    // Step 1: Retrieve the current high score from the database
+    char selectQuery[256];
+    snprintf(selectQuery, sizeof(selectQuery),
+             "SELECT highscore FROM users WHERE username = '%s';", username);
+
+    sqlite3_stmt* stmt;
+    if (sqlite3_prepare_v2(db, selectQuery, -1, &stmt, NULL) != SQLITE_OK) {
+        printf("Error preparing SQL statement: %s\n", sqlite3_errmsg(db));
+        return;
+    }
+
+    int highScore = 0; // Default high score
+    if (sqlite3_step(stmt) == SQLITE_ROW) {
+        highScore = sqlite3_column_int(stmt, 0); // Get the high score from the database
+    }
+    sqlite3_finalize(stmt);
+
+    // Step 2: Compare the current score with the high score
+    if (currentScore > highScore) {
+        // Step 3: Update the high score in the database
+        char updateQuery[256];
+        snprintf(updateQuery, sizeof(updateQuery),
+                 "UPDATE users SET highscore = %d WHERE username = '%s';", currentScore, username);
+
+        if (sqlite3_exec(db, updateQuery, NULL, NULL, NULL) != SQLITE_OK) {
+            printf("Error updating high score: %s\n", sqlite3_errmsg(db));
+        } else {
+            printf("High score updated for user %s: %d\n", username, currentScore);
+        }
+    } else {
+        printf("Current score (%d) is not higher than the high score (%d). No update needed.\n", currentScore, highScore);
+    }
+}
+
+
+#include "raylib.h"
+
+bool DrawGameOverScreen(int score, Texture2D background) {
+    const char* gameOverText = "GAME OVER";
+    const char* scoreText = TextFormat("Your Score: %d", score);
+    const char* backButtonLabel = "Back to Menu";
+
+    // Define the back button
+    Rectangle backButton = {GetScreenWidth() / 2 - 100, GetScreenHeight() / 2 + 100, 200, 50};
+    Vector2 mousePoint = GetMousePosition();
+
+    while (!WindowShouldClose()) {
+        BeginDrawing();
+        ClearBackground(BLACK);
+
+        // Draw background
+        DrawTexturePro(background,
+            (Rectangle){0, 0, background.width, background.height},
+            (Rectangle){0, 0, GetScreenWidth(), GetScreenHeight()},
+            (Vector2){0, 0}, 0.0f, WHITE);
+
+        // Draw "Game Over" text
+        DrawText(gameOverText, GetScreenWidth() / 2 - MeasureText(gameOverText, 50) / 2, GetScreenHeight() / 2 - 100, 50, RED);
+
+        // Draw the score
+        DrawText(scoreText, GetScreenWidth() / 2 - MeasureText(scoreText, 30) / 2, GetScreenHeight() / 2 - 30, 30, WHITE);
+
+        // Draw the back button
+        Color backButtonColor = CheckCollisionPointRec(mousePoint, backButton) ? Color{ 200, 0, 0, 255 } : RED; // Darker red when hovered
+        DrawRectangleRec(backButton, backButtonColor);
+        DrawText(backButtonLabel, backButton.x + (backButton.width - MeasureText(backButtonLabel, 20)) / 2, backButton.y + 15, 20, WHITE);
+
+        // Check if the back button is clicked
+        if (CheckCollisionPointRec(mousePoint, backButton) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+            EndDrawing();
+            return true; // Signal to return to the menu
+        }
+
+        EndDrawing();
+    }
+
+    return false; // If the window is closed, return false
 }
 
 void DrawHighscorePage(Texture2D background, sqlite3* db) {
@@ -338,6 +441,9 @@ void DrawMenuPage(Texture2D background, bool* shouldClose, PageType* currentPage
 
         // Draw title
         DrawText("MAIN MENU", GetScreenWidth() / 2 - 150, 50, 40, WHITE);
+        
+        DrawText("Current Player: ",10,20,20,WHITE);
+        DrawText(logedInUser,200,20,20,WHITE);
 
         // Draw buttons
         for (int i = 0; i < 4; i++) {
@@ -348,6 +454,8 @@ void DrawMenuPage(Texture2D background, bool* shouldClose, PageType* currentPage
             if (CheckCollisionPointRec(mousePoint, buttons[i]) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
                 if(i==0){
                     DrawGame(background);
+                    UpdateHighScore(db,logedInUser,currentScore);
+                    
                 }
                 else if (i == 1) {
                     DrawHighscorePage(background, db); // Show highscore page

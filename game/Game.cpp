@@ -1,5 +1,7 @@
 #include "Game.hpp"
 #include <iostream>
+#include "raylib.h"
+#include <string>
 
 // Constructor
 Game::Game() {
@@ -9,8 +11,10 @@ Game::Game() {
     alienDirection = 1; // Start moving aliens to the right
     timeLastAlienFired = GetTime(); // Initialize last fire time
     alienLaserShootInterval = 0.5; // Set interval between alien laser shots
-    lives=3;
-    run=true;
+    lives = 3;
+    run = true;
+    highscore = 0;
+    isOver=false;
 }
 
 // Destructor
@@ -22,47 +26,71 @@ Game::~Game() {
 void Game::Draw() {
     spaceship.Draw(); // Draw the spaceship
 
+    // Draw lives
+    DrawText("Lives: ", 10, 10, 20, WHITE);
+    if (lives == 3) {
+        DrawText("O O O", 100, 10, 20, WHITE);
+    } else if (lives == 2) {
+        DrawText("O O", 100, 10, 20, WHITE);
+    } else if (lives == 1) {
+        DrawText("O", 100, 10, 20, WHITE);
+    }else if(lives==0){
+        DrawText("GAME OVER",GetScreenWidth()-100,20,50,RED);
+    }
+
+    // Draw score
+    std::string scoreText = "Score: " + std::to_string(highscore); // Convert score to string
+    DrawText(scoreText.c_str(), GetScreenWidth() - 150, 10, 20, WHITE); // Display score in top-right corner
+
+    // Draw obstacles
     for (auto& obstacle : obstacles) {
-        obstacle.Draw(); // Draw each obstacle
+        obstacle.Draw();
     }
 
+    // Draw aliens
     for (auto& alien : aliens) {
-        alien.Draw(); // Draw each alien
+        alien.Draw();
     }
 
+    // Draw alien lasers
     for (auto& laser : alienLasers) {
-        laser.Draw(); // Draw each alien laser
+        laser.Draw();
     }
 }
 
 // Handle input method
 void Game::HandleInput() {
-    if (IsKeyDown(KEY_LEFT)) {
-        spaceship.MoveLeft(); // Move the spaceship left
-    } else if (IsKeyDown(KEY_RIGHT)) {
-        spaceship.MoveRight(); // Move the spaceship right
-    } else if (IsKeyDown(KEY_SPACE)) {
-        spaceship.FireLaser(); // Fire a laser
+    if (run) {
+        if (IsKeyDown(KEY_LEFT)) {
+            spaceship.MoveLeft(); // Move the spaceship left
+        } else if (IsKeyDown(KEY_RIGHT)) {
+            spaceship.MoveRight(); // Move the spaceship right
+        } else if (IsKeyDown(KEY_SPACE)) {
+            spaceship.FireLaser(); // Fire a laser
+        }
     }
 }
 
 // Update method
 void Game::Update() {
-    // Update spaceship lasers
-    for (auto& laser : spaceship.GetLasers()) {
-        laser.Update();
-    }
+    if (run) {
+        // Update spaceship lasers
+        for (auto& laser : spaceship.GetLasers()) {
+            laser.Update();
+        }
 
-    // Update alien lasers
-    for (auto& laser : alienLasers) {
-        laser.Update();
-    }
+        // Update alien lasers
+        for (auto& laser : alienLasers) {
+            laser.Update();
+        }
 
-    DeleteInactiveLasers(); // Delete inactive lasers
-    MoveAliens(); // Move aliens
-    AlienShootLaser(); // Alien shoots laser
-    CheckForCollisions();
-    std::cout << "Vector Size:------------> " << spaceship.GetLasers().size() << std::endl;
+        DeleteInactiveLasers(); // Delete inactive lasers
+        MoveAliens(); // Move aliens
+        AlienShootLaser(); // Alien shoots laser
+        CheckForCollisions();
+    }else{
+        isOver=true;
+    }
 }
 
 // Delete inactive lasers
@@ -102,8 +130,8 @@ std::vector<Obstacle> Game::CreateObstacles() {
 // Create aliens
 std::vector<Alien> Game::CreateAliens() {
     std::vector<Alien> aliens;
-    for (int row = 0; row < 10; row++) {
-        for (int column = 0; column < 18; column++) { // Reduced columns for better spacing
+    for (int row = 0; row < 5; row++) {
+        for (int column = 0; column < 11; column++) { // Reduced columns for better spacing
             int alienType;
             if (row == 0) {
                 alienType = 3;
@@ -169,18 +197,14 @@ void Game::AlienShootLaser() {
     }
 }
 
-
-
-void Game::CheckForCollisions()
-{
-    //Spaceship Lasers
-
-    for(auto& laser: spaceship.GetLasers()) {
+// Check for collisions
+void Game::CheckForCollisions() {
+    // Spaceship lasers
+    for (auto& laser : spaceship.GetLasers()) {
         auto it = aliens.begin();
-        while(it != aliens.end()){
-            if(CheckCollisionRecs(it -> getRect(), laser.getRect()))
-            {
-
+        while (it != aliens.end()) {
+            if (CheckCollisionRecs(it->getRect(), laser.getRect())) {
+                highscore += 10;
                 it = aliens.erase(it);
                 laser.active = false;
             } else {
@@ -188,10 +212,10 @@ void Game::CheckForCollisions()
             }
         }
 
-        for(auto& obstacle: obstacles){
+        for (auto& obstacle : obstacles) {
             auto it = obstacle.blocks.begin();
-            while(it != obstacle.blocks.end()){
-                if(CheckCollisionRecs(it -> getRect(), laser.getRect())){
+            while (it != obstacle.blocks.end()) {
+                if (CheckCollisionRecs(it->getRect(), laser.getRect())) {
                     it = obstacle.blocks.erase(it);
                     laser.active = false;
                 } else {
@@ -199,31 +223,22 @@ void Game::CheckForCollisions()
                 }
             }
         }
-
-        // if(CheckCollisionRecs(mysteryship.getRect(), laser.getRect())){
-        //     mysteryship.alive = false;
-        //     laser.active = false;
-        //     score += 500;
-        //     checkForHighscore();
-        //     PlaySound(explosionSound);
-        // }
     }
 
-    // Alien Lasers
-
-    for(auto& laser: alienLasers) {
-        if(CheckCollisionRecs(laser.getRect(), spaceship.getRect())){
+    // Alien lasers
+    for (auto& laser : alienLasers) {
+        if (CheckCollisionRecs(laser.getRect(), spaceship.getRect())) {
             laser.active = false;
-            lives --;
-            if(lives == 0) {
-                GameOver();
+            lives--;
+            if (lives == 0) {
+                GameOver(); // Call GameOver when lives reach 0
             }
         }
 
-          for(auto& obstacle: obstacles){
+        for (auto& obstacle : obstacles) {
             auto it = obstacle.blocks.begin();
-            while(it != obstacle.blocks.end()){
-                if(CheckCollisionRecs(it -> getRect(), laser.getRect())){
+            while (it != obstacle.blocks.end()) {
+                if (CheckCollisionRecs(it->getRect(), laser.getRect())) {
                     it = obstacle.blocks.erase(it);
                     laser.active = false;
                 } else {
@@ -233,27 +248,46 @@ void Game::CheckForCollisions()
         }
     }
 
-    //Alien Collision with Obstacle
-    
-    for(auto& alien: aliens) {
-        for(auto& obstacle: obstacles) {
+    // Alien collision with obstacles
+    for (auto& alien : aliens) {
+        for (auto& obstacle : obstacles) {
             auto it = obstacle.blocks.begin();
-            while(it != obstacle.blocks.end()) {
-                if(CheckCollisionRecs(it -> getRect(), alien.getRect())) {
+            while (it != obstacle.blocks.end()) {
+                if (CheckCollisionRecs(it->getRect(), alien.getRect())) {
                     it = obstacle.blocks.erase(it);
                 } else {
-                    it ++;
+                    ++it;
                 }
             }
         }
 
-        if(CheckCollisionRecs(alien.getRect(), spaceship.getRect())) {
-            // GameOver();
+        if (CheckCollisionRecs(alien.getRect(), spaceship.getRect())) {
+            GameOver(); // Call GameOver if alien collides with spaceship
         }
     }
 }
 
+// Game over method
+void Game::GameOver() {
+    run = false; // Stop the game
+    isOver=true;
 
-void Game::GameOver(){
+    // Reset the game state if needed
+    ResetGame();
+}
 
+// Get score method
+int Game::GetScore() {
+    return highscore;
+}
+
+// Reset game method
+void Game::ResetGame() {
+    lives = 3;
+    highscore = 0;
+    aliens = CreateAliens(); // Reinitialize aliens
+    obstacles = CreateObstacles(); // Reinitialize obstacles
+    // spaceship.Reset(); // Reset the spaceship position
+    alienLasers.clear(); // Clear alien lasers
+    spaceship.GetLasers().clear(); // Clear player lasers
 }

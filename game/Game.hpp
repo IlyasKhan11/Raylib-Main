@@ -6,6 +6,7 @@
 #include "Obstacle.hpp"
 #include "Laser.hpp"
 #include <vector>
+#include <string>
 
 class Game {
 public:
@@ -16,7 +17,9 @@ public:
     void HandleInput(); // Handle user input
     void Update(); // Update game state
     bool run;
-
+    int GetScore();
+    void ResetGame();
+    bool isOver;
 private:
     Spaceship spaceship; // Player spaceship
     std::vector<Obstacle> obstacles; // List of obstacles
@@ -26,6 +29,7 @@ private:
     double timeLastAlienFired; // Last time an alien fired a laser
     double alienLaserShootInterval; // Interval between alien laser shots
     int lives;
+    int highscore;
 
     void DeleteInactiveLasers(); // Delete inactive lasers
     std::vector<Obstacle> CreateObstacles(); // Create obstacles
