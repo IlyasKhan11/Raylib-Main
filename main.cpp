@@ -209,10 +209,11 @@ void DrawCreditsPage(Texture2D background) {
     const char* title = "CREDITS PAGE";
     Texture2D bg=LoadTexture("bg.jpg");
     const char* names[] = {
-        "1. Shahzaib (23-cs-xx)",
+        "1. Shahzaib (23-cs-141)",
         "2. Ilyas (23-cs-115)",
-        "3. Suliha (23-cs-99)",
-        "4. Tayabba (23-cs-10)"
+        "3. Suliha (23-cs-29)",
+        "4. Tayyaba (23-cs-97)",
+        "5. Bilal (23-cs-119)"
     };
     const int nameCount = sizeof(names) / sizeof(names[0]);
 
