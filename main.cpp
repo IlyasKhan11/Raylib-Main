@@ -45,7 +45,7 @@ void InitInputField(InputField* field, Rectangle bounds) {
     field->isActive = false;
 }
 
-
+//shahzaib
 void InitDatabase() {
     const char* createTableSQL = 
         "CREATE TABLE IF NOT EXISTS users ("
